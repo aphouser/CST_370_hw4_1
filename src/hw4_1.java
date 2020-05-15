@@ -64,7 +64,7 @@ public class hw4_1 {
        ArrayList<String> permutes = permutation(pString);
 
        // calculate cost for each permutation
-       int lowest = 999;
+       int lowest = 0;
        int lowestIndex = -1;
        int total = 0;
        int counter = 0;
@@ -89,7 +89,7 @@ public class hw4_1 {
           }
 
           // use counter to see if we went to all cities
-          if (counter == v && total < lowest && total > 0 ) {
+          if (counter == v && (total < lowest || lowest == 0)) {
              lowest = total;
              lowestIndex = i;
           }
@@ -100,7 +100,7 @@ public class hw4_1 {
        }
 
        // if valid route
-       if(lowestIndex > -1) {
+       if(lowest > 0) {
           System.out.print("Path:" + cities.get(0) + "->");
           for (int i = 0; i < permutes.get(lowestIndex).length(); i++) {
              System.out.print(cities.get(permutes.get(lowestIndex).charAt(i)-'0') + "->");
