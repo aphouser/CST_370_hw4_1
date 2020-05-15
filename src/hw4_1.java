@@ -1,126 +1,154 @@
+/*
+ * HackerRank link:https://www.hackerrank.com/contests/cst370-su20-hw4/challenges/tsp-2-1/submissions/code/1323588900
+ * Title: hw4_1.java
+ * Abstract: TSP problem, user inputs vertices, edges, and paths with cost.  Program calculates all permutations
+ *          of the number of cities, then outputs the lowest cost path if it exists.
+ * Author: Adam Houser
+ * ID: 1144
+ * Date: 5/14/2020
+ */
+
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class hw4_1 {
 
-    static ArrayList<String> permutations = new ArrayList<>();
-
     public static void main(String[] args) {
 
-        ArrayList<String> cities = new ArrayList<String>();
-        int sum = 0;
-        int lowest = 0;
-        int route = 0;
+       ArrayList<String> cities = new ArrayList();
+       ArrayList<ArrayList<Integer>> list = new ArrayList<ArrayList<Integer>>();
+       String pString = "";
 
-        Scanner in = new Scanner(System.in);
+       Scanner in = new Scanner(System.in);
 
         // get vertices
         int v = in.nextInt();
-
-        // create array with the verticies for heapPermutation use
-        int sortArray[] = new int[v-1];
-        int costArray[][] = new int[v][v];
-
-        // populate array for heapPermutation use
-        for (int i = 0; i < v-1; i++) {
-            sortArray[i] = i+1;
-        }
 
         // add cities to list for future lookup
         for (int i = 0; i < v; i++) {
             cities.add(in.next());
         }
 
+        // generate pString for permutation
+       for (int i = 1; i < v; i++) {
+          pString = pString + i;
+       }
+
         // get edges
         int e = in.nextInt();
 
-        // populate costs
-        // costs is my matrix
-        // each row(sub arraylist) is the starting city index
-        // then each item in the row is the ending city index
-        // and value is the cost
-        // so costs(0).item(4) is the cost from city 0 to city 4
-        // for each line find start city and end city
-        for (int j = 0; j < e; j++) {
-            costArray[cities.indexOf(in.next())][cities.indexOf(in.next())]= in.nextInt();
-        }
+       // create a list for each vertex
+       for (int i = 0; i < v; i++) {
+          ArrayList<Integer> costs = new ArrayList<Integer>();
+          list.add(costs);
+       }
 
-        // generate permutations and populate to arraylist
-        permutation(sortArray, sortArray.length, sortArray.length);
+       // populate them all with 0 to start with
+       for (int i = 0; i < v; i++){
+          for (int j = 0; j < v; j++){
+             list.get(i).add(0);
+          }
+       }
 
-        // for each entry in permutations, find the cost
-        for (int x = 0; x < permutations.size(); x++) {
-            String holder = permutations.get(x);
-            for (int y = 0; y < v; y++) {
-                // if the value in costArray for [x][y] > 0 then add to sum
-                if(costArray[holder.charAt(y) - '0'][holder.charAt(y+1) - '0'] == 0) {
-                    sum = 0;
-                    break;
-                }
-                else {
-                    sum = sum + costArray[holder.charAt(y) - '0'][holder.charAt(y+1) - '0'];
-                }
-            }
+       // add edge mapping for each
+       for (int i = 0; i < e; i++){
+          String temp1 = in.next();
+          String temp2 = in.next();
+          int temp3 = in.nextInt();
+          list.get(cities.indexOf(temp1)).set(cities.indexOf(temp2), temp3);
+       }
 
-            if(sum < lowest || lowest == 0) {
-                lowest = sum;
-                route = x;
-            }
+       in.close();
 
-            sum = 0;
-        }
+       // create permutations
+       ArrayList<String> permutes = permutation(pString);
 
-        String output = permutations.get(route);
+       // calculate cost for each permutation
+       int lowest = 999;
+       int lowestIndex = -1;
+       int total = 0;
+       int counter = 0;
 
-        if (lowest == 0) {
-            System.out.println("Path:");
-            System.out.println("Cost:-1");
-        }
-        else {
-            System.out.print("Path:");
-            for (int z = 0; z < output.length()-1; z++) {
-                System.out.print(cities.get((output.charAt(z)-'0')) + "->");
-            }
-            System.out.println(cities.get((output.charAt(output.length()-1))-'0'));
-            System.out.println("Cost:" + lowest);
-        }
+       for (int i = 0; i < permutes.size(); i++) {
+          // temp string to add starting location to front and end
+          String temp = "0" + permutes.get(i) + "0";
+
+          // for each pair of numbers in the string get the cost from matrix
+          for (int j = 0; j < temp.length()-1; j++) {
+             int source = (temp.charAt(j)-'0');
+             int dest = (temp.charAt(j+1)-'0');
+             int subTotal = list.get(source).get(dest);
+
+             // check if it is a valid cost ie > 0.  If 0 no route
+             if (subTotal > 0) {
+                counter++;
+             }
+
+             // sum up
+             total = total + subTotal;
+          }
+
+          // use counter to see if we went to all cities
+          if (counter == v && total < lowest && total > 0 ) {
+             lowest = total;
+             lowestIndex = i;
+          }
+
+          // reset for next permutation
+          total = 0;
+          counter = 0;
+       }
+
+       // if valid route
+       if(lowestIndex > -1) {
+          System.out.print("Path:" + cities.get(0) + "->");
+          for (int i = 0; i < permutes.get(lowestIndex).length(); i++) {
+             System.out.print(cities.get(permutes.get(lowestIndex).charAt(i)-'0') + "->");
+          }
+          System.out.println(cities.get(0));
+          System.out.println("Cost:" + lowest);
+       }
+       // invalid route
+       else {
+          System.out.println("Path:");
+          System.out.println("Cost:-1");
+       }
     }
 
-    // below Heap's algorithm to generate permutations
-    // general Heap's algorithm from geeksforgeeks, updated for this project to add to arraylist
-    // creates temp string and adds to arraylist
-    static void printArr(int a[], int n) {
-        String temp = "";
-        temp = temp + "0";
-        for (int i = 0; i < n; i++)
-            temp = temp + a[i];
-        temp = temp + "0";
-        permutations.add(temp);
+    // generate permutations
+    public static ArrayList<String> permutation(String str)
+    {
+
+       // If string is empty
+       if (str.length() == 0) {
+
+          // Return an empty arraylist
+          ArrayList<String> empty = new ArrayList<>();
+          empty.add("");
+          return empty;
+       }
+
+       // Take first character of str
+       char ch = str.charAt(0);
+
+       // Take sub-string starting from the second character
+       String subStr = str.substring(1);
+
+       // Recurvise call
+       ArrayList<String> prevResult = permutation(subStr);
+
+       // Store the generated permutations into the resultant arraylist
+       ArrayList<String> result = new ArrayList<>();
+
+       for (String val : prevResult) {
+          for (int i = 0; i <= val.length(); i++) {
+             result.add(val.substring(0, i) + ch + val.substring(i));
+          }
+       }
+
+       // Return the resultant arraylist
+       return result;
     }
 
-    //Generating permutation using Heap Algorithm
-    static void permutation(int array[], int size, int n) {
-        // if size becomes 1 then prints the obtained permutation
-        if (size == 1)
-            printArr(array, n);
 
-        for (int i = 0; i < size; i++) {
-            permutation(array, size - 1, n);
-
-            // if size is odd, swap first and last element
-            if (size % 2 == 1) {
-                int temp = array[0];
-                array[0] = array[size - 1];
-                array[size - 1] = temp;
-            }
-
-            // If size is even, swap ith and last element
-            else {
-                int temp = array[i];
-                array[i] = array[size - 1];
-                array[size - 1] = temp;
-            }
-        }
-
-    }
 }
